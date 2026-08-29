@@ -1,0 +1,56 @@
+services:
+  php:
+    user: ${USER_UID}:${USER_GID}
+    container_name: ${XO_PROJECT_NAME}-php
+    image: ${XO_PHP_IMAGE}
+    build:
+      context: ${PHP_DIR_ABS}
+      target: dev
+    ports:
+      - "${XO_PHP_PORT:-80}:80"
+      - "${XO_PHP_TLS_PORT:-443}:443"
+    volumes:
+      - ${XO_ROOT_DIR}/${XO_PHP_ROOT}:/app/:rw
+      - ${XO_CONFIG_DIR}/composer_tmp:/composer/:rw
+      - ${XO_CONFIG_DIR}/cert:/cert:ro
+    env_file:
+      - ${XO_ROOT_DIR}/.env
+      - ${XO_ROOT_DIR}/.env.local
+    environment:
+      SERVER_NAME: localhost
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    tty: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  php-worker:
+    user: ${USER_UID}:${USER_GID}
+    container_name: ${XO_PROJECT_NAME}-php-worker
+    image: ${XO_PHP_IMAGE}
+    build:
+      context: ${PHP_DIR_ABS}
+      target: dev
+    volumes:
+      - ${XO_ROOT_DIR}/${XO_PHP_ROOT}:/app/:rw
+      - ${XO_CONFIG_DIR}/composer_tmp:/composer/:rw
+    env_file:
+      - ${XO_ROOT_DIR}/.env
+      - ${XO_ROOT_DIR}/.env.local
+    environment:
+      SERVER_NAME: localhost
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["php", "bin/console", "messenger:consume", "async", "-vv"]
+    stop_signal: SIGTERM
+    restart: unless-stopped
+
+networks:
+  default:
+    external: true
+    name: ${XO_PROJECT_NAME}

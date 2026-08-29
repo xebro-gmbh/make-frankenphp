@@ -1,0 +1,12 @@
+services:
+  php:
+    depends_on:
+      localstack:
+        condition: service_healthy
+        restart: true
+
+  php-worker:
+    depends_on:
+      localstack:
+        condition: service_healthy
+        restart: true

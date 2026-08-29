@@ -1,0 +1,2 @@
+# exclude the generated compose.yaml, the config to copy is located in ./config/.gitignore
+compose.yaml

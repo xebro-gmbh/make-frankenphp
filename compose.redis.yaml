@@ -1,0 +1,12 @@
+services:
+  php:
+    depends_on:
+      redis:
+        condition: service_healthy
+        restart: true
+
+  php-worker:
+    depends_on:
+      redis:
+        condition: service_healthy
+        restart: true
